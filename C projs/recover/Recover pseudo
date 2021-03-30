@@ -1,0 +1,323 @@
+O OPEN MEMORY CARD: Accept image as command line argument
+
+O Remind user and quit if command line argument != 2
+
+O If image cannot be opened for reading, remind user + quit
+
+O Check 512 bytes at a time into a buffer
+
+        IF: start of a new JPEG
+O       &IF:  block includes JPEG signature, and this is your first JPEG write to 000.jpg
+O             Increase counter per JPEG
+
+O       ELSE: Close current file you've been writing to and write to next file in order
+
+o ELSE: If already found jpeg, keep writing as may take up many blocks
+
+o IF: end of JPEG close any remaining files
+
+./recover sessue.jpg
+./recover card.raw
+
+----
+start writing to doc (??? i think )
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+
+int main(int argc, char *argv[])
+{
+    //check usage
+    if (argc != 2)
+    {
+        printf("Usage: ./recover image \n");
+        return 1;
+    }
+
+    //Open file + make sure its a non-error'd openable file  (*file = file pointer)
+    FILE *file = fopen(argv[1], "r");
+    if (!file || file == NULL)
+    {
+        printf("TRY AGAIN-- Usage: ./recover image.file\n");
+        return 1;
+    }
+
+    size_t bytes_read;
+    unsigned char bufferBytes[512];
+    //create counter for images
+    int fileCounter = 0;
+    char cur_filename [100];
+
+while(true)
+{
+    //cancel if there are no more bytes to read
+    bytes_read = fread(bufferBytes, 512, 1, file);
+    if (bytes_read == 0)
+    {
+        break;
+    }
+
+    // check for Jpeg signature 4 digits
+    if (bufferBytes[0] == 0xff &&
+        bufferBytes[1] == 0xd8 &&
+        bufferBytes[2] == 0xff &&
+        (bufferBytes[3] & 0xf0) == 0xe0)
+    {
+        printf("boopboop %03i.jpg\n", fileCounter);
+        sprintf(cur_filename, "%03i.jpg\n", fileCounter);
+        fclose(file);
+
+        //write the 512 bytes into our file
+        file = fopen(cur_filename, "w");
+        fwrite(bufferBytes, 512, 1, file);
+        fileCounter ++;
+    }
+
+    else
+    {
+        printf("uh oh\n");
+    }
+
+    //fclose(file);
+    }
+return 0;
+}
+
+
+
+
+----
+check jpeg sig 4 bytes, if wrong uh oh
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main(int argc, char *argv[])
+{
+    //check usage
+    if (argc != 2)
+    {
+        printf("Usage: ./recover image \n");
+        return 1;
+    }
+
+    //Open file + make sure its a non-error'd openable file  (*file = file pointer)
+    FILE *file = fopen(argv[1], "r");
+    if (!file || file == NULL)
+    {
+        printf("Usage: ./recover image.file\n");
+        return 1;
+    }
+
+
+    unsigned char bufferBytes[512];
+    fread(bufferBytes, 512, 1, file);
+
+    //create counter for images
+    int counter = 0;
+
+    // check for Jpeg signature 4 digits
+    if (bufferBytes[0] == 0xff &&
+        bufferBytes[1] == 0xd8 &&
+        bufferBytes[2] == 0xff &&
+        (bufferBytes[3] & 0xf0) == 0xe0)
+    {
+        printf("boopboop %03i.jpg\n", counter);
+        counter ++;
+    }
+
+    else
+    {
+        printf("uh oh\n");
+    }
+
+    fclose(file);
+}
+
+----
+boopboop 000.jpg
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main(int argc, char *argv[])
+{
+    //check usage
+    if (argc != 2)
+    {
+        printf("Usage: ./recover image \n");
+        return 1;
+    }
+
+    //Open file + make sure its a non-error'd openable file  (*file = file pointer)
+    FILE *file = fopen(argv[1], "r");
+    if (!file || file == NULL)
+    {
+        printf("Usage: ./recover image.file\n");
+        return 1;
+    }
+
+    //check for JPEG signature (3)
+    unsigned char bufferBytes[512];
+    fread(bufferBytes, 3, 1, file);
+
+    //create counter for images
+    int counter = 0;
+
+    if (bufferBytes[0] == 0xff && bufferBytes[1] == 0xd8 && bufferBytes[2] == 0xff)
+    {
+        printf("boopboop %03i.jpg\n", counter);
+        counter ++;
+    }
+
+    fclose(file);
+}
+
+----
+bufferBytes
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+
+
+int main(int argc, char *argv[])
+{
+    //check usage
+    if (argc != 2)
+    {
+        printf("Usage: ./recover image \n");
+        return 1;
+    }
+
+    //Open file + make sure its a non-error'd openable file  (*file = file pointer)
+    FILE *file = fopen(argv[1], "r");
+    if (!file || file == NULL)
+    {
+        printf("Usage: ./recover image.file\n");
+        return 1;
+    }
+
+//check for JPEG signature (3)    (L26 "file" = file pointer name)
+    unsigned char bufferBytes[512];
+    fread(bufferBytes, 3, 1, file);
+
+    if (bufferBytes[0] == 0xff && bufferBytes[1] == 0xd8 && bufferBytes[2] == 0xff)
+    {
+        printf("boopboop\n");
+    }
+
+    fclose(file);
+}
+
+
+----
+boopboop if JPEG
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+
+
+int main(int argc, char *argv[])
+{
+    //check usage
+    if (argc != 2)
+    {
+        printf("Usage: ./recover image \n");
+        return 1;
+    }
+
+    //Open file + make sure its a good non-error'd openable file
+    FILE *file = fopen(argv[1], "r");
+    if (!file || file == NULL)
+    {
+        printf("Usage: ./recover image.file\n");
+        return 1;
+    }
+
+//check for JPEG signature (3)
+    unsigned char bytes[3];
+    fread(bytes, 3, 1, file);
+
+    if (bytes[0] == 0xff && bytes[1] == 0xd8 && bytes[2] == 0xff)
+    {
+        printf("boopboop\n");
+    }
+}
+
+----
+boopboop if file + close at end
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+
+
+int main(int argc, char *argv[])
+{
+    //check usage
+    if (argc != 2)
+    {
+        printf("Usage: ./recover image \n");
+        return 1;
+    }
+
+    //Open file + make sure its a good non-error'd openable file
+    FILE *file = fopen(argv[1], "r");
+    if (!file || file == NULL)
+    {
+        printf("Usage: ./recover image.file\n");
+        return 1;
+    }
+
+//check for JPEG signature (3)
+    unsigned char bytes[3];
+    fread(bytes, 3, 1, file);
+
+    if (bytes[0] == 0xff && bytes[1] == 0xd8 && bytes[2] == 0xff)
+    {
+        printf("boopboop\n");
+    }
+
+    fclose(file);
+}
+
+====
+whoop if file :
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+
+
+int main(int argc, char *argv[])
+{
+    //check usage
+    if (argc != 2)
+    {
+        printf("Usage: ./recover image \n");
+        return 1;
+    }
+
+    //Open file
+    FILE *file = fopen(argv[1], "r");
+    if (!file)
+    {
+        printf("Usage: ./recover image.file\n");
+        return 1;
+    }
+
+    else
+    {
+        printf("whoop\n");
+        return 0;
+    }
+
+}
